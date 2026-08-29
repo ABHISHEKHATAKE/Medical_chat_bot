@@ -14,12 +14,15 @@ RUN apt-get update && \
         libopenblas-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY . .
+COPY pyproject.toml requirements.txt ./
 
 RUN python -m pip install --upgrade pip && \
-    pip install -r requirements.txt && \
-    pip install -e .
+    pip install -r requirements.txt
+
+COPY . .
+
+RUN pip install -e .
 
 EXPOSE 8000
 
-CMD ["uvicorn", "rag_pipeline.api.main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]
+CMD ["sh", "-c", "uvicorn rag_pipeline.api.main:app --app-dir src --host 0.0.0.0 --port $PORT"]
