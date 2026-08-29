@@ -1,0 +1,11 @@
+retrieval:
+  top_k: 5
+  similarity_metric: cosine
+  reranking_enabled: false
+
+chunking:
+  size: 800
+  overlap: 120
+
+index:
+  path: data/embeddings/vector_store

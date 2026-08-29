@@ -1,0 +1,8 @@
+training:
+  base_model_path: models/base
+  output_dir: models/fine_tuned
+  dataset_path: data/processed/training.jsonl
+  epochs: 3
+  learning_rate: 0.00002
+
+# Keep training data separate from retrieval documents.

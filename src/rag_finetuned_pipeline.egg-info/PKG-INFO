@@ -1,0 +1,15 @@
+Metadata-Version: 2.4
+Name: rag-finetuned-pipeline
+Version: 0.1.0
+Summary: RAG retrieval pipeline for a fine-tuned language model
+Requires-Python: >=3.10
+Requires-Dist: datasets>=2.0
+Requires-Dist: faiss-cpu>=1.8.0
+Requires-Dist: fastapi>=0.110
+Requires-Dist: pydantic-settings>=2.0
+Requires-Dist: requests>=2.0
+Requires-Dist: sentence-transformers>=3.0
+Requires-Dist: uvicorn[standard]>=0.29
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: ruff>=0.6.0; extra == "dev"

@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rag-finetuned-pipeline"
+version = "0.1.0"
+description = "RAG retrieval pipeline for a fine-tuned language model"
+requires-python = ">=3.10"
+dependencies = [
+    "datasets>=2.0",
+    "faiss-cpu>=1.8.0",
+    "fastapi>=0.110",
+    "pydantic-settings>=2.0",
+    "pymongo>=4.8",
+    "requests>=2.0",
+    "sentence-transformers>=3.0",
+    "uvicorn[standard]>=0.29",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
