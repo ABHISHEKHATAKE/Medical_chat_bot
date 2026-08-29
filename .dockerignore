@@ -1,0 +1,18 @@
+.git
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+.mypy_cache
+.env
+.env.*
+.DS_Store
+.gitignore
+README.md
+notebooks/
+
+# keep project data required by app
+# data/raw/
+# data/processed/
