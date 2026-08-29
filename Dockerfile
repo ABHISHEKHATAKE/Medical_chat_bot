@@ -14,12 +14,11 @@ RUN apt-get update && \
         libopenblas-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY pyproject.toml requirements.txt ./
+COPY . .
+
 RUN python -m pip install --upgrade pip && \
     pip install -r requirements.txt && \
     pip install -e .
-
-COPY . .
 
 EXPOSE 8000
 
