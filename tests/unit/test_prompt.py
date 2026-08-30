@@ -65,3 +65,37 @@ def test_generate_supports_groq_provider(monkeypatch) -> None:
     answer = generate("Test prompt", "llama-3.1-8b-instant", "groq")
 
     assert answer == "Groq answer"
+
+
+def test_embedding_and_reranker_models_are_cached(monkeypatch) -> None:
+    import rag_pipeline.retrieval.embedder as embedder_module
+    import rag_pipeline.retrieval.reranker as reranker_module
+
+    created = {"embedder": 0, "reranker": 0}
+
+    class DummyEmbedder:
+        def encode(self, texts):
+            return [float(len(text)) for text in texts]
+
+    class DummyReranker:
+        def predict(self, pairs):
+            return [0.9 for _ in pairs]
+
+    def fake_sentence_transformer(model_name):
+        created["embedder"] += 1
+        return DummyEmbedder()
+
+    def fake_cross_encoder(model_name):
+        created["reranker"] += 1
+        return DummyReranker()
+
+    monkeypatch.setattr(embedder_module, "SentenceTransformer", fake_sentence_transformer)
+    monkeypatch.setattr(reranker_module, "CrossEncoder", fake_cross_encoder)
+
+    embedder_module.get_embedder("sentence-transformers/all-MiniLM-L6-v2")
+    embedder_module.get_embedder("sentence-transformers/all-MiniLM-L6-v2")
+    reranker_module.get_reranker("cross-encoder/ms-marco-MiniLM-L-6-v2")
+    reranker_module.get_reranker("cross-encoder/ms-marco-MiniLM-L-6-v2")
+
+    assert created["embedder"] == 1
+    assert created["reranker"] == 1
