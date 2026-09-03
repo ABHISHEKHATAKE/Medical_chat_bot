@@ -1,32 +1,43 @@
-@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Noto+Sans:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --color-primary: #0891B2;
-  --color-secondary: #22D3EE;
-  --color-accent: #059669;
-  --color-background: #ECFEFF;
-  --color-foreground: #164E63;
+  --color-primary: #0F172A;
+  --color-accent: #16A34A;
+  --color-background: #09090B;
+  --color-foreground: #0F172A;
   --color-card: #FFFFFF;
-  --color-muted: #E8F1F6;
-  --color-muted-fg: #64748B;
-  --color-border: #A5F3FC;
-  --color-ring: #0891B2;
-  --color-destructive: #DC2626;
+  --color-border: #E5E7EB;
 }
 
-* { border-color: var(--color-border); }
 html { scroll-behavior: smooth; }
 body {
-  font-family: 'Noto Sans', system-ui, sans-serif;
-  background: #F8FAFC;
-  color: var(--color-foreground);
+  font-family: 'Inter', system-ui, sans-serif;
+  background: #09090B;
+  color: #0F172A;
   -webkit-font-smoothing: antialiased;
 }
-h1,h2,h3,h4 { font-family: 'Figtree', sans-serif; letter-spacing: -0.02em; }
-:focus-visible { outline: 2px solid var(--color-ring); outline-offset: 2px; }
+h1,h2,h3,h4 { font-family: 'Inter', sans-serif; letter-spacing: -0.02em; font-weight: 600; }
+:focus-visible { outline: 2px solid #0F172A; outline-offset: 2px; }
+
+/* Orbita-style outer app container */
+.orbita-outer {
+  background: #09090B;
+  min-height: 100vh;
+  padding: 12px;
+}
+.orbita-app {
+  background: #FFFFFF;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+  min-height: calc(100vh - 24px);
+}
+
+/* Soft shadows */
+.shadow-soft { box-shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06); }
 
 /* markdown */
 .markdown p { margin: 0.6em 0; line-height: 1.7; }
@@ -34,6 +45,6 @@ h1,h2,h3,h4 { font-family: 'Figtree', sans-serif; letter-spacing: -0.02em; }
 .markdown ol { list-style: decimal; padding-left: 1.25rem; }
 .markdown strong { font-weight: 600; color: #0f172a; }
 .markdown code { background: #f1f5f9; padding: 0.15rem 0.35rem; border-radius: 6px; font-size: 0.9em; }
-.markdown pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 10px; overflow:auto; margin: 0.8rem 0; }
+.markdown pre { background: #0f172a; color: #e2e8f0; padding: 1rem; border-radius: 12px; overflow:auto; margin: 0.8rem 0; }
 .markdown pre code { background: transparent; padding: 0; color: inherit; }
 .markdown h3 { font-size: 1.05rem; font-weight: 600; margin: 1rem 0 0.5rem; }
