@@ -4,7 +4,17 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>frontend</title>
+    <title>MediChat</title>
+    <script>
+      (function() {
+        try {
+          var t = localStorage.getItem("medichat-theme") || localStorage.getItem("theme") || "system";
+          var m = window.matchMedia("(prefers-color-scheme: dark)").matches;
+          var d = t === "dark" || (t === "system" && m);
+          if (d) document.documentElement.classList.add("dark");
+        } catch(e) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>

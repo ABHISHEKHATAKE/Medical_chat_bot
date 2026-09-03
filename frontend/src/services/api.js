@@ -24,13 +24,7 @@ api.interceptors.request.use(async (config) => {
 api.interceptors.response.use(
   (r) => r,
   (error) => {
-    if (error.response?.status === 401) {
-      // Redirect to sign-in on auth failure
-      const path = window.location.pathname;
-      if (!path.startsWith("/sign-")) {
-        window.location.href = "/sign-in";
-      }
-    }
+    // Let components handle 401 - don't auto-redirect to avoid logout on refresh while Clerk is loading
     return Promise.reject(error);
   }
 );

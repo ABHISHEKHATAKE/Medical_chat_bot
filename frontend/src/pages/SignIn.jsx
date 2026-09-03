@@ -13,12 +13,12 @@ export default function SignIn() {
 
   if (clerkMode) {
     return (
-      <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-        <header className="h-[64px] flex items-center px-6 border-b bg-white">
-          <Link to="/" className="flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[#0891B2] text-white grid place-items-center"><HeartPulse size={18} /></span><span className="font-semibold">Medical AI</span></Link>
+      <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#171717] flex flex-col">
+        <header className="h-[56px] flex items-center px-6 border-b border-[#E5E7EB] dark:border-[#3A3A3A] bg-white dark:bg-[#212121]">
+          <Link to="/" className="flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] grid place-items-center"><HeartPulse size={16} /></span><span className="font-semibold text-sm dark:text-[#ECECEC]">MediChat</span></Link>
         </header>
         <div className="flex-1 grid place-items-center p-6">
-          <ClerkSignIn afterSignInUrl="/chat" afterSignUpUrl="/chat" />
+          <ClerkSignIn fallbackRedirectUrl="/" forceRedirectUrl="/" />
         </div>
       </div>
     );
@@ -30,30 +30,30 @@ export default function SignIn() {
     if (!id) return;
     const finalId = id.includes("@") ? id : `${id}@dev.local`;
     setDevUserId(finalId);
-    navigate("/chat", { replace: true });
+    navigate("/", { replace: true });
   };
 
   return (
-    <div className="min-h-screen bg-[#F8FAFC] flex flex-col">
-      <header className="h-[64px] flex items-center px-6 border-b bg-white">
-        <Link to="/" className="flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[#0891B2] text-white grid place-items-center"><HeartPulse size={18} /></span><span className="font-semibold text-[#164E63]">Medical AI</span></Link>
+    <div className="min-h-screen bg-[#F8F9FA] dark:bg-[#171717] flex flex-col">
+      <header className="h-[56px] flex items-center px-6 border-b border-[#E5E7EB] dark:border-[#3A3A3A] bg-white dark:bg-[#212121]">
+        <Link to="/" className="flex items-center gap-2"><span className="w-8 h-8 rounded-lg bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] grid place-items-center"><HeartPulse size={16} /></span><span className="font-semibold text-sm dark:text-[#ECECEC]">MediChat</span></Link>
       </header>
       <div className="flex-1 grid place-items-center p-4">
-        <form onSubmit={handleDevLogin} className="w-full max-w-[420px] bg-white rounded-2xl border border-slate-200 p-6 sm:p-8 shadow-sm">
-          <h1 className="text-xl font-semibold">Sign in</h1>
-          <p className="text-sm text-slate-600 mt-1">Dev mode — no Clerk keys configured. Enter any email to continue. In production this is Clerk.</p>
+        <form onSubmit={handleDevLogin} className="w-full max-w-[420px] bg-white dark:bg-[#2A2A2A] rounded-2xl border border-slate-200 dark:border-[#3A3A3A] p-6 sm:p-8 shadow-sm">
+          <h1 className="text-xl font-semibold dark:text-[#ECECEC]">Sign in</h1>
+          <p className="text-sm text-slate-600 dark:text-[#B4B4B4] mt-1">Dev mode — no Clerk keys configured. Enter any email to continue. In production this is Clerk.</p>
           <div className="mt-6 space-y-3">
             <div>
-              <label className="text-sm font-medium">Email</label>
-              <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" type="email" required className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0891B2] focus:ring-2 focus:ring-[#0891B2]/20" />
+              <label className="text-sm font-medium dark:text-[#ECECEC]">Email</label>
+              <input value={email} onChange={e=>setEmail(e.target.value)} placeholder="you@example.com" type="email" required className="mt-1 w-full border border-slate-200 dark:border-[#3A3A3A] dark:bg-[#212121] dark:text-[#ECECEC] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0F172A] dark:focus:border-[#3A3A3A] focus:ring-2 focus:ring-[#0F172A]/10 dark:focus:ring-white/10" />
             </div>
             <div>
-              <label className="text-sm font-medium">Display name (optional)</label>
-              <input value={name} onChange={e=>setName(e.target.value)} placeholder="Alex" className="mt-1 w-full border border-slate-200 rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0891B2] focus:ring-2 focus:ring-[#0891B2]/20" />
+              <label className="text-sm font-medium dark:text-[#ECECEC]">Display name (optional)</label>
+              <input value={name} onChange={e=>setName(e.target.value)} placeholder="Alex" className="mt-1 w-full border border-slate-200 dark:border-[#3A3A3A] dark:bg-[#212121] dark:text-[#ECECEC] rounded-lg px-3 py-2.5 text-sm outline-none focus:border-[#0F172A] dark:focus:border-[#3A3A3A] focus:ring-2 focus:ring-[#0F172A]/10 dark:focus:ring-white/10" />
             </div>
             <Button type="submit" className="w-full" size="lg">Continue to chat</Button>
-            <p className="text-xs text-slate-500 text-center">By continuing you agree to use this for educational purposes only.</p>
-            <p className="text-xs text-center">No account? <Link to="/sign-up" className="text-[#0891B2] underline">Create one</Link></p>
+            <p className="text-xs text-slate-500 dark:text-[#8E8E8E] text-center">By continuing you agree to use this for educational purposes only.</p>
+            <p className="text-xs text-center dark:text-[#B4B4B4]">No account? <Link to="/sign-up" className="text-[#10A37F] underline">Create one</Link></p>
           </div>
         </form>
       </div>
