@@ -6,7 +6,7 @@ import { UserMessage } from "./UserMessage.jsx";
 import { AssistantMessage } from "./AssistantMessage.jsx";
 import { ChatEmptyState } from "./ChatEmptyState.jsx";
 
-export function ChatContainer({ messages, loading, error, onSend, onRetry, input, setInput, listRef }) {
+export function ChatContainer({ messages, loading, error, onSend, onRetry, input, setInput, listRef, imageFile, setImageFile }) {
   const containerRef = useRef(null);
   const [showJump, setShowJump] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
@@ -49,7 +49,7 @@ export function ChatContainer({ messages, loading, error, onSend, onRetry, input
             <div className="space-y-4">
               {messages.map((m) =>
                 m.role === "user" ? (
-                  <UserMessage key={m._id} content={m.content} />
+                  <UserMessage key={m._id} content={m.content} image={m.image} />
                 ) : (
                   <AssistantMessage key={m._id} content={m.content} sources={m.sources} />
                 )
@@ -73,9 +73,11 @@ export function ChatContainer({ messages, loading, error, onSend, onRetry, input
           <ChatInput
             value={input}
             onChange={setInput}
-            onSend={() => onSend()}
+            onSend={() => onSend(input, imageFile)}
             loading={loading}
             placeholder={messages.length === 0 ? "Ask a medical question..." : "Ask a follow-up..."}
+            imageFile={imageFile}
+            setImageFile={setImageFile}
           />
           <p className="text-[11px] text-[#8E8E8E] dark:text-[#8E8E8E] text-center mt-2">Medical AI provides general health information and is not a substitute for professional medical advice.</p>
         </div>

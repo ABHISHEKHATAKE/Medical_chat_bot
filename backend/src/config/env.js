@@ -14,6 +14,10 @@ export const env = {
   clerkSecretKey: process.env.CLERK_SECRET_KEY,
   frontendUrl: process.env.FRONTEND_URL || "http://localhost:5173",
   nodeEnv: process.env.NODE_ENV || "development",
+  cloudinaryCloudName: process.env.CLOUDINARY_CLOUD_NAME,
+  cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
+  cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
+  maxImageSizeMB: parseInt(process.env.MAX_IMAGE_SIZE_MB || "5", 10),
 };
 
 if (!env.mongodbUri) console.warn("[env] MONGODB_URI missing");

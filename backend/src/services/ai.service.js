@@ -7,11 +7,18 @@ const client = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-export async function askRag({ sessionId, question }) {
+export async function askRag({ sessionId, question, imageUrl }) {
   try {
-    const res = await client.post("/ask", { session_id: sessionId, question });
-    // Python returns {answer, used_context, sources}
-    return { answer: res.data.answer, used_context: res.data.used_context, sources: res.data.sources || [] };
+    const payload = { session_id: sessionId, question };
+    if (imageUrl) payload.image_url = imageUrl;
+    const res = await client.post("/ask", payload);
+    // Python returns {answer, used_context, sources, image_analysis}
+    return {
+      answer: res.data.answer,
+      used_context: res.data.used_context,
+      sources: res.data.sources || [],
+      imageAnalysis: res.data.image_analysis || null,
+    };
   } catch (e) {
     if (e.response) {
       const status = e.response.status;
