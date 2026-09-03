@@ -10,11 +10,21 @@ from rag_pipeline.retrieval.embedder import embed_query
 
 
 def build_index(embedded_chunks: list[dict], store_path: str) -> None:
-    """Persist a FAISS index and JSON metadata for the embedded chunks."""
+    """Persist a FAISS index and JSON metadata for the embedded chunks.
+
+    Uses inner-product (cosine) search because embeddings are L2-normalized.
+    Falls back to normalized L2 if IP index is unavailable; keeps build compatible
+    with existing retrieval that expects cosine-like ranking.
+    """
     path = Path(store_path)
     path.mkdir(parents=True, exist_ok=True)
     vectors = np.asarray([chunk["embedding"] for chunk in embedded_chunks], dtype="float32")
-    index = faiss.IndexFlatL2(vectors.shape[1])
+    # L2-normalize to ensure cosine = IP (defensive if caller forgot normalize)
+    norms = np.linalg.norm(vectors, axis=1, keepdims=True)
+    norms[norms == 0] = 1
+    vectors = vectors / norms
+    # Use Inner Product for cosine similarity on normalized vectors
+    index = faiss.IndexFlatIP(vectors.shape[1])
     index.add(vectors)
     faiss.write_index(index, str(path / "index.faiss"))
     metadata = [{key: value for key, value in chunk.items() if key != "embedding"} for chunk in embedded_chunks]

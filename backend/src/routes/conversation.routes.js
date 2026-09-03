@@ -1,0 +1,14 @@
+import { Router } from "express";
+import { requireAuth } from "../middleware/auth.middleware.js";
+import { validate } from "../middleware/validate.middleware.js";
+import { updateConversationSchema } from "../validators/conversation.schema.js";
+import * as ctrl from "../controllers/conversation.controller.js";
+const r = Router();
+r.use(requireAuth);
+r.post("/", ctrl.createConversation);
+r.get("/", ctrl.listConversations);
+r.get("/:id", ctrl.getConversation);
+r.patch("/:id", validate(updateConversationSchema, "body"), ctrl.updateConversation);
+r.delete("/:id", ctrl.deleteConversation);
+r.get("/:id/messages", ctrl.getMessages);
+export default r;

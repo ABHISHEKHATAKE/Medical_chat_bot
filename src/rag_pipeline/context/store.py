@@ -51,6 +51,9 @@ def save_turn(
     """Save one completed turn and keep a runtime fallback so session memory survives in-process."""
     session_history = _SESSION_MEMORY.setdefault(session_id, [])
     session_history.append({"question": question, "answer": answer})
+    # Cap in-memory history to avoid unbounded growth (keep last 100 turns per session)
+    if len(session_history) > 100:
+        _SESSION_MEMORY[session_id] = session_history[-100:]
 
     if not uri:
         return

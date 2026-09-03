@@ -14,10 +14,10 @@ def get_embedder(model_name: str):
 def embed_chunks(chunks: list[dict[str, str]], model_name: str) -> list[dict]:
     """Add embeddings to chunks."""
     embedder = get_embedder(model_name)
-    embeddings = embedder.encode([chunk["text"] for chunk in chunks])
+    embeddings = embedder.encode([chunk["text"] for chunk in chunks], normalize_embeddings=True)
     return [dict(chunk, embedding=embedding) for chunk, embedding in zip(chunks, embeddings)]
 
 
 def embed_query(query: str, model_name: str):
     """Embed one query for vector search."""
-    return get_embedder(model_name).encode([query])
+    return get_embedder(model_name).encode([query], normalize_embeddings=True)
