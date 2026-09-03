@@ -4,7 +4,12 @@ import { Button } from "../ui/Button.jsx";
 
 export function Nav({ onMenu }) {
   const navigate = useNavigate();
-  const devMode = !import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
+  const clerkMode = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && !import.meta.env.VITE_CLERK_PUBLISHABLE_KEY.includes("placeholder");
+  const devUser = localStorage.getItem("dev_user_id");
+  const handleLogout = () => {
+    localStorage.removeItem("dev_user_id");
+    navigate("/sign-in");
+  };
   return (
     <header className="sticky top-0 z-30 bg-white/80 backdrop-blur border-b border-[#A5F3FC]">
       <div className="max-w-[1280px] mx-auto px-4 sm:px-6 h-[64px] flex items-center justify-between">
@@ -20,8 +25,17 @@ export function Nav({ onMenu }) {
           <Link to="/safety" className="px-3 py-2 rounded-lg hover:bg-slate-50">Safety</Link>
         </nav>
         <div className="flex items-center gap-2">
-          {devMode ? (
-            <Button variant="outline" size="sm" onClick={()=>navigate("/chat")}>Open chat</Button>
+          {clerkMode ? (
+            <>
+              <Link to="/sign-in" className="hidden sm:inline-flex text-sm px-3 py-2">Sign in</Link>
+              <Button size="sm" onClick={()=>navigate("/sign-up")}>Get started</Button>
+            </>
+          ) : devUser ? (
+            <>
+              <span className="hidden sm:inline text-xs text-slate-500 max-w-[160px] truncate">{devUser}</span>
+              <Button variant="outline" size="sm" onClick={handleLogout}>Sign out</Button>
+              <Button size="sm" onClick={()=>navigate("/chat")}>Chat</Button>
+            </>
           ) : (
             <>
               <Link to="/sign-in" className="hidden sm:inline-flex text-sm px-3 py-2">Sign in</Link>

@@ -24,13 +24,21 @@ export default function Chat() {
   const listRef = useRef(null);
 
   const fetchConvs = async () => {
-    const data = await api.listConversations();
-    setConversations(data);
+    try {
+      const data = await api.listConversations();
+      setConversations(data);
+    } catch (e) {
+      if (e.response?.status === 401) navigate("/sign-in");
+    }
   };
   const fetchMessages = async (id) => {
     if(!id){ setMessages([]); return; }
-    const data = await api.getMessages(id);
-    setMessages(data);
+    try {
+      const data = await api.getMessages(id);
+      setMessages(data);
+    } catch (e) {
+      if (e.response?.status === 401) navigate("/sign-in");
+    }
   };
 
   useEffect(()=>{ fetchConvs(); }, []);
