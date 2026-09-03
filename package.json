@@ -1,0 +1,21 @@
+{
+  "name": "medichat-root",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "concurrently -n py,api,web -c blue,green,magenta \"npm:dev:py\" \"npm:dev:api\" \"npm:dev:web\"",
+    "dev:py": "python -m uvicorn rag_pipeline.api.main:app --app-dir src --host 127.0.0.1 --port 8000 --reload",
+    "dev:api": "npm run dev --prefix backend",
+    "dev:web": "npm run dev --prefix frontend -- --host 0.0.0.0 --port 5173",
+    "start": "concurrently -n py,api,web -c blue,green,magenta \"npm:start:py\" \"npm:start:api\" \"npm:start:web\"",
+    "start:py": "python -m uvicorn rag_pipeline.api.main:app --app-dir src --host 127.0.0.1 --port 8000",
+    "start:api": "npm start --prefix backend",
+    "start:web": "npm run preview --prefix frontend -- --host 0.0.0.0 --port 5173",
+    "install:all": "pip install -r requirements.txt && pip install -e . && npm install --prefix backend && npm install --prefix frontend",
+    "build": "npm run build --prefix frontend"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  }
+}
