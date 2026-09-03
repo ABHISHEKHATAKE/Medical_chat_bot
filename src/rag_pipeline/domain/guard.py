@@ -45,8 +45,13 @@ def is_medical_question(question: str) -> bool:
     if not text.strip():
         return False
 
-    tokens = set(text.replace("?", " ").replace("!", " ").split())
-    has_medical_term = bool(tokens & {term.lower() for term in _MEDICAL_KEYWORDS})
+    # Support multi-word keywords (e.g. "side effects", "blood pressure") via substring
+    for term in _MEDICAL_KEYWORDS:
+        if term.lower() in text:
+            return True
+
+    tokens = set(text.replace("?", " ").replace("!", " ").replace(",", " ").replace(".", " ").split())
+    has_medical_term = bool(tokens & {term.lower() for term in _MEDICAL_KEYWORDS if " " not in term})
 
     if has_medical_term:
         return True
@@ -57,6 +62,8 @@ def is_medical_question(question: str) -> bool:
         "how to treat",
         "how does this medicine work",
         "side effects of",
+        "side effects",
+        "side effect",
         "is this normal",
         "when should i see a doctor",
         "disease",

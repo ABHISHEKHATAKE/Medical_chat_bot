@@ -27,12 +27,15 @@ def generate(prompt: str, model_name: str, provider: str) -> str:
                 "model": model_name,
                 "messages": [{"role": "user", "content": prompt}],
                 "temperature": 0.2,
-                "max_tokens": 220,
+                "max_tokens": 512,
             },
             timeout=60,
         )
         response.raise_for_status()
         payload = response.json()
-        return payload["choices"][0]["message"]["content"]
+        try:
+            return payload["choices"][0]["message"]["content"]
+        except (KeyError, IndexError) as exc:
+            raise ValueError(f"Unexpected Groq response shape: {payload}") from exc
 
     raise NotImplementedError(f"Unsupported model provider: {provider}")

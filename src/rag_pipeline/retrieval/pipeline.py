@@ -10,14 +10,16 @@ def search(
     embedding_model: str,
     reranker_model: str,
     store_path: str,
-    top_k_retrieve: int = 4,
-    top_k_final: int = 2,
-    threshold: float = 0.6,
+    top_k_retrieve: int = 8,
+    top_k_final: int = 5,
+    threshold: float = 0.5,
     exclude_types: list[str] | None = None,
 ) -> tuple[list[dict], bool]:
     """Retrieve only the most relevant context to keep answers concise and precise."""
     excluded = set(exclude_types or [])
+    # Use rewritten query for retrieval recall, but rerank against original query for precision
     search_query = rewrite_query(user_query)
     candidates = retrieve(search_query, top_k_retrieve, store_path, embedding_model)
-    candidates = [candidate for candidate in candidates if candidate.get("type") not in excluded]
+    if excluded:
+        candidates = [candidate for candidate in candidates if candidate.get("type") not in excluded]
     return rerank(user_query, candidates, reranker_model, top_k_final, threshold)

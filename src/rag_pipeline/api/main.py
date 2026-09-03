@@ -49,15 +49,19 @@ def ask(request: AskRequest) -> AskResponse:
             settings.mongodb_database,
             settings.mongodb_collection,
             settings.context_turn_limit,
+            history=history,
         )
+        # Retrieve more candidates than final top_k to allow reranking headroom;
+        # do NOT filter by type - all medical chunk types are valid for grounding.
         chunks, pass_to_llm_directly = search(
             cleaned_question,
             embedding_model=settings.embedding_model,
             reranker_model=settings.reranker_model,
             store_path=settings.vector_store_path,
+            top_k_retrieve=max(6, settings.top_k + 3),
             top_k_final=settings.top_k,
             threshold=settings.similarity_threshold,
-            exclude_types=["definition"],
+            exclude_types=None,
         )
         prompt = build_prompt(
             cleaned_question,
@@ -81,6 +85,9 @@ def ask(request: AskRequest) -> AskResponse:
         ) from error
     except NotImplementedError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
+    except ValueError as error:
+        # e.g. missing GROQ_API_KEY
+        raise HTTPException(status_code=503, detail=str(error)) from error
     except requests.RequestException as error:
         raise HTTPException(
             status_code=503,
@@ -91,6 +98,6 @@ def ask(request: AskRequest) -> AskResponse:
         ) from error
     return AskResponse(
         answer=answer,
-        used_context=not pass_to_llm_directly,
-        sources=[chunk.get("question", "unknown") for chunk in chunks],
+        used_context=not pass_to_llm_directly and len(chunks) > 0,
+        sources=[chunk.get("question", "unknown") for chunk in chunks] if chunks else [],
     )

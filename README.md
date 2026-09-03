@@ -1,4 +1,28 @@
-# Medical RAG Pipeline
+# Medical AI Chatbot — Full-Stack RAG System
+
+A retrieval-augmented generation (RAG) project designed for medical and health-related question answering. The system ingests medical documents, chunks them into searchable units, embeds and indexes them, retrieves relevant passages, reranks them, and sends the best context to a language model to produce grounded answers.
+
+**Full-stack architecture (new):**
+- **React + Vite + Tailwind + Clerk** frontend (`frontend/`)
+- **Node.js + Express + Mongoose + Clerk + Zod** backend (`backend/`)
+- **Python FastAPI RAG service** (existing `src/rag_pipeline/` — preserved as AI service)
+
+```mermaid
+graph TD
+  React[React Frontend :5173] -->|axios + Clerk token / dev header| Express[Express Backend :5000]
+  Express -->|Mongoose| MongoDB[(MongoDB)]
+  Express -->|POST /ask {session_id, question}| Python[Python FastAPI :8000]
+  Python --> FAISS[(FAISS IndexFlatIP)]
+  Python --> Embeddings
+  Python --> Reranker
+  Python --> Groq[Groq LLM]
+```
+
+> Python RAG is **preserved** — see `docs/RAG_ANALYSIS.md` for contract. React never calls Python directly; Express is the API layer (`AI_SERVICE_URL`).
+
+---
+
+# Medical RAG Pipeline (Python AI Service)
 
 A retrieval-augmented generation (RAG) project designed for medical and health-related question answering. The system ingests medical documents, chunks them into searchable units, embeds and indexes them, retrieves relevant passages, reranks them, and sends the best context to a language model to produce grounded answers.
 
@@ -70,6 +94,25 @@ The project is useful for any organization that wants an LLM assistant grounded 
 
 ```text
 .
+├── backend/                 # Express app (new)
+│   ├── src/
+│   │   ├── config/ (env, db)
+│   │   ├── controllers/ (conversation, chat)
+│   │   ├── middleware/ (auth, validate, error)
+│   │   ├── models/ (Conversation, Message)
+│   │   ├── routes/
+│   │   ├── services/ (ai.service -> Python /ask)
+│   │   └── validators/ (zod)
+│   ├── .env.example
+│   └── package.json
+├── frontend/                # React app (new)
+│   ├── src/
+│   │   ├── components/ (ui, chat, layout)
+│   │   ├── pages/ (Landing, About, Safety, Chat, Profile)
+│   │   ├── services/ (api)
+│   │   └── index.css (design tokens: #0891B2, Figtree+Noto Sans)
+│   ├── .env.example
+│   └── package.json
 ├── configs/
 │   ├── retrieval.yaml
 │   └── training.yaml
@@ -85,7 +128,7 @@ The project is useful for any organization that wants an LLM assistant grounded 
 │   ├── build_index.py
 │   └── run_pipeline.py
 ├── src/
-│   └── rag_pipeline/
+│   └── rag_pipeline/       # Python AI service (preserved)
 │       ├── api/
 │       ├── config/
 │       ├── context/
@@ -95,6 +138,7 @@ The project is useful for any organization that wants an LLM assistant grounded 
 │       ├── retrieval/
 │       └── __init__.py
 ├── tests/
+├── docs/RAG_ANALYSIS.md
 ├── .gitignore
 ├── Dockerfile
 ├── pyproject.toml
@@ -271,6 +315,42 @@ Possible next steps for this project include:
 - adding a stricter citation mechanism for returned passages
 - adding a fine-tuning workflow for domain-specific medical models
 
+## Full-stack quick start
+
+**1) Python AI service** (port 8000, preserved):
+```powershell
+python -m venv .venv; .\.venv\Scripts\Activate.ps1
+pip install -r requirements.txt; pip install -e .
+# .env at root already has GROQ_API_KEY, MONGODB_URI, etc.
+python scripts\build_index.py
+python -m uvicorn rag_pipeline.api.main:app --app-dir src --host 127.0.0.1 --port 8000
+# health: http://127.0.0.1:8000/health, docs: /docs
+```
+
+**2) Express backend** (port 5000):
+```powershell
+Set-Location backend
+npm install
+# copy .env.example -> .env, set MONGODB_URI (same cluster, db medical_ai), AI_SERVICE_URL=http://localhost:8000, CLERK_SECRET_KEY (or use dev header)
+node src/server.js  # or: npm run dev
+# health: http://localhost:5000/health
+# dev auth: send header x-dev-user-id: test-user-123 (frontend sets localStorage.dev_user_id)
+```
+
+**3) React frontend** (port 5173):
+```powershell
+Set-Location frontend
+npm install
+npm run dev  # or npm run build
+# VITE_API_URL=http://localhost:5000 in .env
+# Clerk: set VITE_CLERK_PUBLISHABLE_KEY or use dev mode (no key -> "Open chat")
+# Routes: /, /about, /safety, /chat, /chat/:id, /profile
+```
+
+**API integration:** `frontend -> POST /api/chat {conversationId, message} -> Express validates (Zod), saves user Message, calls Python POST /ask {session_id=conversationId, question}, saves assistant Message with sources, returns {answer, sources, used_context}`. See `backend/src/services/ai.service.js`.
+
+**Env templates:** `backend/.env.example`, `frontend/.env.example`, `.env.example` (root).
+
 ## Summary
 
-This project is a practical medical RAG system that combines retrieval, reranking, context memory, and generative AI to provide safer and more grounded answers for health-related questions. It is suitable for both experimentation and deployment as a backend service for a medical assistant or knowledge retrieval tool.
+This project is a practical medical RAG system that combines retrieval, reranking, context memory, and generative AI to provide safer and more grounded answers for health-related questions. The full-stack wrapper adds a modern, trustworthy medical UI (Tailwind #0891B2/#059669, Figtree+Noto Sans, AI-Native minimal) with Clerk auth, conversation history, source display, and responsive chat layout.

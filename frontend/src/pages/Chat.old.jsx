@@ -1,0 +1,324 @@
+import { useEffect, useState, useRef } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { AssistantRuntimeProvider, useExternalStoreRuntime } from "@assistant-ui/react";
+import { Search, Plus, MessageSquare, Trash2, Send, ChevronDown, Sparkles, Menu, X, LogOut, Stethoscope } from "lucide-react";
+import { Button } from "../components/ui/button.jsx";
+import * as api from "../services/conversation.api.js";
+import { clearDevUserId, isClerkConfigured, isDevAuthenticated } from "../hooks/useDevAuth.js";
+import { useAuth, useUser } from "@clerk/clerk-react";
+import ReactMarkdown from "react-markdown";
+
+function AssistantThread({ messages }) {
+  return (
+    <div className="space-y-4">
+      {messages.map((m, idx) => (
+        <motion.div key={m._id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: idx * 0.02 }}>
+          {m.role === "user" ? (
+            <div className="flex justify-end">
+              <div className="max-w-[78%] rounded-2xl bg-[#0F172A] text-white px-4 py-3 text-sm leading-6 whitespace-pre-wrap break-words">
+                {m.content}
+              </div>
+            </div>
+          ) : (
+            <div className="flex gap-3">
+              <div className="w-7 h-7 rounded-full bg-[#0F172A] text-white grid place-items-center shrink-0 mt-1"><Sparkles size={12} /></div>
+              <div className="flex-1 min-w-0">
+                <div className="rounded-2xl border border-[#E5E7EB] bg-white px-4 py-3 shadow-soft">
+                  <div className="markdown text-sm leading-6 text-slate-800"><ReactMarkdown>{m.content}</ReactMarkdown></div>
+                  {m.sources && m.sources.length > 0 && <SourcesBadge sources={m.sources} />}
+                </div>
+              </div>
+            </div>
+          )}
+        </motion.div>
+      ))}
+    </div>
+  );
+}
+
+function SourcesBadge({ sources }) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="mt-3">
+      <button onClick={() => setOpen(v => !v)} className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full border border-[#E5E7EB] bg-[#F8F9FA] hover:bg-white">
+        Sources • {sources.length} <ChevronDown size={12} className={`${open ? "rotate-180" : ""} transition`} />
+      </button>
+      {open && <ul className="mt-2 text-xs bg-[#F8F9FA] border border-[#E5E7EB] rounded-xl p-3 space-y-1 list-disc pl-5">{sources.map((s, i) => <li key={i} className="break-words text-slate-600">{s}</li>)}</ul>}
+    </div>
+  );
+}
+
+export default function Chat() {
+  const { conversationId } = useParams();
+  const navigate = useNavigate();
+  const clerkMode = isClerkConfigured();
+  // Safe Clerk hooks - always call, handle missing provider
+  let clerkAuth = { isLoaded: true, isSignedIn: false, getToken: async () => null };
+  let clerkUserData = { isLoaded: true, user: null };
+  try {
+    clerkAuth = useAuth();
+    clerkUserData = useUser();
+  } catch {
+    // Not in ClerkProvider (dev mode) - use fallback
+  }
+  const isClerkLoaded = clerkMode ? !!(clerkAuth.isLoaded && clerkUserData.isLoaded) : true;
+  const isAuthed = clerkMode ? (isClerkLoaded ? !!clerkAuth.isSignedIn : false) : isDevAuthenticated();
+  const clerkUser = clerkMode ? clerkUserData.user : null;
+  const isAuthLoading = clerkMode && !isClerkLoaded;
+
+  const [conversations, setConversations] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [drawer, setDrawer] = useState(false);
+  const [query, setQuery] = useState("");
+  const listRef = useRef(null);
+
+  // Restore pending prompt after login (ChatGPT flow)
+  useEffect(() => {
+    const pending = sessionStorage.getItem("pendingPrompt");
+    if (pending && isAuthed) {
+      sessionStorage.removeItem("pendingPrompt");
+      setInput(pending);
+      // auto-send after a tick so conversation is ready
+      setTimeout(() => {
+        const el = document.querySelector('textarea[placeholder="Ask anything..."]');
+        if (el) el.focus();
+      }, 100);
+    }
+  }, [isAuthed]);
+
+  const fetchConvs = async () => {
+    try {
+      const data = await api.listConversations();
+      setConversations(data);
+    } catch {
+      // don't redirect - chat is public entry point, just show empty
+      setConversations([]);
+    }
+  };
+  const fetchMessages = async (id) => {
+    if (!id) { setMessages([]); return; }
+    try {
+      const data = await api.getMessages(id);
+      setMessages(data);
+    } catch {
+      setMessages([]);
+    }
+  };
+
+  useEffect(() => { if (isAuthed) fetchConvs(); else setConversations([]); }, [isAuthed]);
+  useEffect(() => { fetchMessages(conversationId); }, [conversationId]);
+  useEffect(() => { listRef.current?.scrollTo({ top: listRef.current.scrollHeight, behavior: "smooth" }); }, [messages, loading]);
+
+  const ensureConversation = async () => {
+    if (conversationId) return conversationId;
+    const c = await api.createConversation();
+    await fetchConvs();
+    navigate(`/chat/${c._id}`);
+    return c._id;
+  };
+
+  const requireAuthOrRedirect = (pendingText) => {
+    if (isAuthed) return true;
+    sessionStorage.setItem("pendingPrompt", pendingText);
+    navigate("/sign-in");
+    return false;
+  };
+
+  const send = async (text) => {
+    const msg = (text ?? input).trim();
+    if (!msg || loading) return;
+    if (!requireAuthOrRedirect(msg)) return;
+    setError(""); setInput("");
+    const id = await ensureConversation();
+    const tmp = { _id: `tmp-${Date.now()}`, role: "user", content: msg, createdAt: new Date().toISOString() };
+    setMessages(m => [...m, tmp]);
+    setLoading(true);
+    try {
+      await api.sendChat(id, msg);
+      await fetchMessages(id);
+      await fetchConvs();
+    } catch (e) {
+      setError(e.response?.data?.error || e.message || "Something went wrong.");
+      if (e.response?.status === 401) navigate("/sign-in");
+    } finally { setLoading(false); }
+  };
+
+  const onNew = async () => { navigate("/"); setMessages([]); setDrawer(false); };
+  const onSelect = (id) => { navigate(`/chat/${id}`); setDrawer(false); };
+  const onDelete = async (id) => { if (!confirm("Delete conversation?")) return; await api.deleteConversation(id); if (id === conversationId) navigate("/"); fetchConvs(); };
+  const handleLogout = async () => {
+    if (clerkMode && window.Clerk?.signOut) {
+      await window.Clerk.signOut();
+      navigate("/sign-in");
+    } else {
+      clearDevUserId();
+      navigate("/sign-in");
+    }
+  };
+
+  const filtered = conversations.filter(c => !query || c.title.toLowerCase().includes(query.toLowerCase()));
+
+  const Sidebar = () => (
+    <div className="flex flex-col h-full bg-white">
+      <div className="p-3">
+        <Button className="w-full justify-center gap-2 rounded-full" onClick={onNew}><Plus size={14} /> New chat</Button>
+        <div className="mt-3 relative">
+          <Search className="absolute left-3 top-2.5 text-slate-400" size={14} />
+          <input value={query} onChange={e => setQuery(e.target.value)} placeholder="Search chats" className="w-full pl-9 pr-3 py-2 text-sm bg-[#F8F9FA] border border-[#E5E7EB] rounded-full outline-none focus:border-[#0F172A]" />
+        </div>
+      </div>
+      <div className="flex-1 overflow-auto px-2 pb-2">
+        {filtered.length === 0 ? (
+          <div className="text-sm text-slate-400 px-2 py-8 text-center">No conversations yet.<br />Start typing below.</div>
+        ) : (
+          <div className="space-y-1">
+            {filtered.map(c => (
+              <div key={c._id} onClick={() => onSelect(c._id)} className={`group flex items-center gap-2 px-3 py-2.5 rounded-xl cursor-pointer text-sm border ${conversationId === c._id ? "bg-[#F1F5F9] border-[#E5E7EB] font-medium" : "border-transparent hover:bg-[#F8F9FA] hover:border-[#E5E7EB]"}`}>
+                <MessageSquare size={14} className="shrink-0 text-slate-400" />
+                <span className="flex-1 truncate">{c.title}</span>
+                <button aria-label="Delete" onClick={e => { e.stopPropagation(); onDelete(c._id); }} className="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded-lg"><Trash2 size={12} /></button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      <div className="p-3 border-t border-[#E5E7EB] flex items-center gap-2">
+        {clerkMode ? (
+          clerkUser?.imageUrl ? (
+            <img src={clerkUser.imageUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-[#E5E7EB]" />
+          ) : clerkUser ? (
+            <div className="w-8 h-8 rounded-full bg-[#0F172A] text-white grid place-items-center text-xs font-bold">
+              {(clerkUser.firstName?.[0] || clerkUser.username?.[0] || "U").toUpperCase()}
+            </div>
+          ) : (
+            <div className="w-8 h-8 rounded-full bg-slate-200 text-slate-600 grid place-items-center text-xs font-bold">G</div>
+          )
+        ) : (
+          <div className="w-8 h-8 rounded-full bg-[#0F172A] text-white grid place-items-center text-xs font-bold">
+            {(localStorage.getItem("dev_user_id")?.[0] || "G").toUpperCase()}
+          </div>
+        )}
+        <div className="flex-1 min-w-0">
+          <div className="text-xs font-medium truncate">
+            {clerkMode ? (clerkUser ? (clerkUser.fullName || clerkUser.username || clerkUser.primaryEmailAddress?.emailAddress || "User") : "Guest") : (localStorage.getItem("dev_user_id") || "Guest")}
+          </div>
+          <div className="text-[11px] text-slate-500 truncate">{clerkMode ? (clerkUser ? "Google • Free plan" : "Sign in to sync") : "Free plan"}</div>
+        </div>
+        <button onClick={handleLogout} className="p-2 hover:bg-slate-100 rounded-full" title="Sign out"><LogOut size={14} /></button>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="orbita-outer">
+      <div className="orbita-app flex overflow-hidden" style={{ height: "calc(100vh - 24px)" }}>
+        {/* Sidebar - desktop */}
+        <div className="hidden lg:flex w-[280px] shrink-0 border-r border-[#E5E7EB] flex-col bg-white">
+          <div className="h-[56px] flex items-center gap-2 px-4 border-b border-[#E5E7EB]">
+            <span className="w-8 h-8 rounded-lg bg-[#0F172A] text-white grid place-items-center"><Stethoscope size={16} /></span>
+            <span className="font-semibold text-sm">MediChat</span>
+          </div>
+          <Sidebar />
+        </div>
+
+        {/* Drawer mobile */}
+        {drawer && (
+          <div className="lg:hidden fixed inset-0 z-50 flex">
+            <div className="flex-1 bg-black/20" onClick={() => setDrawer(false)} />
+            <div className="w-[300px] bg-white h-full flex flex-col border-r border-[#E5E7EB]">
+              <div className="h-[56px] flex items-center justify-between px-4 border-b border-[#E5E7EB]">
+                <span className="font-semibold text-sm">Chats</span>
+                <button onClick={() => setDrawer(false)} className="p-2 -mr-2"><X size={18} /></button>
+              </div>
+              <Sidebar />
+            </div>
+          </div>
+        )}
+
+        {/* Main */}
+        <div className="flex-1 flex flex-col min-w-0 bg-[#F8F9FA]">
+          {/* Header - minimal */}
+          <div className="h-[56px] flex items-center justify-between px-4 bg-white border-b border-[#E5E7EB] shrink-0">
+            <div className="flex items-center gap-2">
+              <button className="lg:hidden p-2 -ml-2" onClick={() => setDrawer(true)}><Menu size={18} /></button>
+              <span className="font-semibold text-sm hidden sm:inline">MediChat</span>
+              {!isAuthed && <button onClick={() => navigate("/sign-in")} className="text-xs bg-[#FEF3C7] border border-[#FDE68A] text-[#92400E] rounded-full px-2.5 py-1 font-medium hover:bg-[#FDE68A]">Sign in to chat</button>}
+            </div>
+            <div className="flex items-center gap-2">
+              {!isAuthed ? (
+                <Button size="sm" className="rounded-full" onClick={() => navigate("/sign-in")}>Sign in</Button>
+              ) : (
+                <Button variant="outline" size="sm" className="rounded-full" onClick={onNew}>New chat</Button>
+              )}
+            </div>
+          </div>
+
+          {/* Thread */}
+          <div ref={listRef} className="flex-1 overflow-auto">
+            <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-6">
+              {messages.length === 0 ? (
+                <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="min-h-[60vh] flex flex-col items-center justify-center">
+                  <div className="w-full max-w-[560px]">
+                    <div className="text-center mb-6">
+                      <h1 className="text-2xl font-bold tracking-tight">What can I help with?</h1>
+                      <p className="text-sm text-slate-500 mt-1">Ask any medical question — grounded in trusted sources.</p>
+                    </div>
+                    <div className="rounded-[20px] border border-[#E5E7EB] bg-white shadow-soft p-4">
+                      <textarea
+                        value={input}
+                        onChange={e => setInput(e.target.value)}
+                        onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                        placeholder="Ask anything..."
+                        rows={2}
+                        className="w-full resize-none outline-none text-sm placeholder:text-slate-400"
+                      />
+                      <div className="mt-3 flex justify-end">
+                        <Button size="sm" className="rounded-full gap-1" onClick={() => send()} disabled={!input.trim() || loading}><Send size={14} /> Send</Button>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-500 text-center mt-3">Medical AI may display inaccurate info. Verify with a professional. <span className="underline">Privacy</span></p>
+                    <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {["What are common symptoms of diabetes?", "What causes a persistent cough?", "Explain treatment for anemia"].map(s => (
+                        <button key={s} onClick={() => send(s)} className="text-left text-xs p-3 rounded-xl border border-[#E5E7EB] bg-white hover:bg-slate-50 hover:border-[#0F172A]/20 transition-colors">{s}</button>
+                      ))}
+                    </div>
+                  </div>
+                </motion.div>
+              ) : (
+                <div className="space-y-4">
+                  <AssistantThread messages={messages} loading={loading} onSend={send} />
+                  {loading && <div className="flex gap-3 items-center text-sm text-slate-500"><span className="w-7 h-7 rounded-full bg-white border border-[#E5E7EB] grid place-items-center"><span className="w-2 h-2 bg-[#0F172A] rounded-full animate-pulse" /></span> AI is thinking...</div>}
+                  {error && <div className="rounded-xl border border-red-200 bg-red-50 text-sm text-red-700 p-3 flex justify-between items-center"><span>{error}</span><Button variant="outline" size="sm" onClick={() => send(messages[messages.length - 1]?.content || "")}>Retry</Button></div>}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Composer when thread has messages */}
+          {messages.length > 0 && (
+            <div className="bg-[#F8F9FA] p-3 sm:p-4">
+              <div className="max-w-[720px] mx-auto">
+                <div className="rounded-[20px] border border-[#E5E7EB] bg-white shadow-soft p-3 flex items-end gap-2">
+                  <textarea
+                    value={input}
+                    onChange={e => setInput(e.target.value)}
+                    onKeyDown={e => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } }}
+                    placeholder="Ask a follow-up..."
+                    rows={1}
+                    className="flex-1 resize-none outline-none text-sm py-2 px-2 max-h-[120px] placeholder:text-slate-400"
+                  />
+                  <Button size="sm" className="rounded-full h-8 w-8 p-0 shrink-0" disabled={!input.trim() || loading} onClick={() => send()}><Send size={14} /></Button>
+                </div>
+                <p className="text-[11px] text-slate-500 text-center mt-2">Medical AI provides general health information and is not a substitute for professional advice.</p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

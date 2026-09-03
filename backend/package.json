@@ -1,0 +1,18 @@
+{
+  "name": "medical-ai-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node --watch src/server.js",
+    "start": "node src/server.js"
+  },
+  "dependencies": {
+    "@clerk/express": "^1.3.0",
+    "axios": "^1.13.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.0",
+    "express": "^4.21.0",
+    "mongoose": "^8.9.0",
+    "zod": "^3.23.8"
+  }
+}

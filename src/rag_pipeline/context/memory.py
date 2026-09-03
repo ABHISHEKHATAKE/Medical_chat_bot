@@ -53,9 +53,13 @@ def resolve_memory_query(question: str, history: list[dict] | None = None) -> tu
         return question, ""
 
     cleaned = question
-    for phrase in ("what about", "what else", "how about", "tell me more about", "more about"):
-        if phrase in cleaned.lower():
-            cleaned = cleaned.split(phrase, 1)[1].strip()
+    lowered_cleaned = cleaned.lower()
+    for phrase in ("tell me more about", "what about", "what else", "how about", "more about"):
+        if phrase in lowered_cleaned:
+            idx = lowered_cleaned.find(phrase)
+            cleaned = cleaned[idx + len(phrase):].strip(" :?-")
+            # Recompute lower for subsequent loop break
+            lowered_cleaned = cleaned.lower()
             break
 
     cleaned = cleaned.replace(" that", "").replace(" this", "").replace(" it", "").replace(" they", "").replace(" them", "").strip()
