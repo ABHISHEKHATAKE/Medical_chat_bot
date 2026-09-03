@@ -315,39 +315,63 @@ Possible next steps for this project include:
 - adding a stricter citation mechanism for returned passages
 - adding a fine-tuning workflow for domain-specific medical models
 
-## Full-stack quick start
+## One-command start (recommended)
+
+Run **all three services** (Python + Backend + Frontend) with a single command from the project root:
+
+```powershell
+# 1) Install everything once
+npm run install:all   # pip + backend + frontend
+
+# 2) Build the FAISS index once (required before first chat)
+python scripts\build_index.py
+
+# 3) Start all in DEV mode (with hot-reload, colored logs, Ctrl+C stops all)
+npm run dev
+#  — or —
+powershell -ExecutionPolicy Bypass -File ./run.ps1
+#  — or double-click —
+run.bat
+```
+
+This starts:
+*   `py`  — http://127.0.0.1:8000 (docs: /docs)
+*   `api` — http://localhost:5000 (health: /health)
+*   `web` — http://localhost:5173
+
+Other modes:
+```powershell
+npm start              # production (no reload)
+npm run dev:py         # only Python
+npm run dev:api        # only Backend
+npm run dev:web        # only Frontend
+powershell -File ./run.ps1 -NoReload   # prod via ps1
+```
+
+Manual alternative (3 terminals):
 
 **1) Python AI service** (port 8000, preserved):
 ```powershell
 python -m venv .venv; .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt; pip install -e .
-# .env at root already has GROQ_API_KEY, MONGODB_URI, etc.
 python scripts\build_index.py
 python -m uvicorn rag_pipeline.api.main:app --app-dir src --host 127.0.0.1 --port 8000
-# health: http://127.0.0.1:8000/health, docs: /docs
 ```
 
 **2) Express backend** (port 5000):
 ```powershell
-Set-Location backend
-npm install
-# copy .env.example -> .env, set MONGODB_URI (same cluster, db medical_ai), AI_SERVICE_URL=http://localhost:8000, CLERK_SECRET_KEY (or use dev header)
+Set-Location backend; npm install
+# copy .env.example -> .env, set MONGODB_URI, AI_SERVICE_URL=http://localhost:8000, CLERK_SECRET_KEY
 node src/server.js  # or: npm run dev
-# health: http://localhost:5000/health
-# dev auth: send header x-dev-user-id: test-user-123 (frontend sets localStorage.dev_user_id)
 ```
 
 **3) React frontend** (port 5173):
 ```powershell
-Set-Location frontend
-npm install
-npm run dev  # or npm run build
-# VITE_API_URL=http://localhost:5000 in .env
-# Clerk: set VITE_CLERK_PUBLISHABLE_KEY or use dev mode (no key -> "Open chat")
-# Routes: /, /about, /safety, /chat, /chat/:id, /profile
+Set-Location frontend; npm install; npm run dev
+# VITE_API_URL=http://localhost:5000, VITE_CLERK_PUBLISHABLE_KEY
 ```
 
-**API integration:** `frontend -> POST /api/chat {conversationId, message} -> Express validates (Zod), saves user Message, calls Python POST /ask {session_id=conversationId, question}, saves assistant Message with sources, returns {answer, sources, used_context}`. See `backend/src/services/ai.service.js`.
+**API integration:** `frontend -> POST /api/chat {conversationId, message} -> Express (Zod, Clerk) -> Python POST /ask {session_id=conversationId, question} -> FAISS -> LLM -> Express saves assistant Message -> React`. See `backend/src/services/ai.service.js`.
 
 **Env templates:** `backend/.env.example`, `frontend/.env.example`, `.env.example` (root).
 

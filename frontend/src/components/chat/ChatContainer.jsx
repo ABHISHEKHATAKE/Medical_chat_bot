@@ -40,8 +40,8 @@ export function ChatContainer({ messages, loading, error, onSend, onRetry, input
   };
 
   return (
-    <div className="flex-1 flex flex-col min-w-0 bg-[#F8F9FA] dark:bg-[#212121] relative">
-      <div ref={scrollRef} className="flex-1 overflow-auto">
+    <div className="flex-1 flex flex-col min-h-0 min-w-0 bg-[#F8F9FA] dark:bg-[#212121] relative">
+      <div ref={scrollRef} className="flex-1 min-h-0 overflow-auto overscroll-contain">
         <div className="max-w-[720px] mx-auto px-4 sm:px-6 py-6">
           {messages.length === 0 ? (
             <ChatEmptyState onSend={onSend} onSelectExample={onSend} />
@@ -68,7 +68,7 @@ export function ChatContainer({ messages, loading, error, onSend, onRetry, input
 
       <ScrollToLatest visible={showJump} onClick={jumpToLatest} />
 
-      <div className="bg-[#F8F9FA] dark:bg-[#212121] p-3 sm:p-4">
+      <div className="shrink-0 sticky bottom-0 z-10 bg-[#F8F9FA] dark:bg-[#212121] p-3 sm:p-4 border-t border-transparent dark:border-[#212121]">
         <div className="max-w-[720px] mx-auto">
           <ChatInput
             value={input}
