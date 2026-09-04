@@ -34,6 +34,22 @@ def health() -> dict[str, str]:
 
 @app.post("/ask", response_model=AskResponse)
 def ask(request: AskRequest) -> AskResponse:
+    if request.image_url and not is_medical_question(request.question):
+        try:
+            from rag_pipeline.vision.analyzer import analyze_general_image
+
+            answer = analyze_general_image(request.image_url, request.question)
+            return AskResponse(
+                answer=answer,
+                used_context=False,
+                sources=[],
+                image_analysis=None,
+            )
+        except ValueError as error:
+            raise HTTPException(status_code=503, detail=str(error)) from error
+        except requests.RequestException as error:
+            raise HTTPException(status_code=503, detail="The configured image model is unavailable") from error
+
     if not is_medical_question(request.question):
         raise HTTPException(status_code=400, detail=medical_refusal())
 

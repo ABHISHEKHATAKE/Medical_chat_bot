@@ -1,4 +1,4 @@
-"""System prompt for medical image understanding."""
+"""System prompts for image understanding."""
 
 VISION_SYSTEM_PROMPT = """You are a medical image assistant for a retrieval-augmented health information system.
 
@@ -38,6 +38,13 @@ Example for medicine package:
 }
 """
 
+GENERAL_IMAGE_PROMPT = """You are a general image understanding assistant.
+
+Describe the image clearly and directly. Mention the main visible objects, colors, scene, and any obvious text if present.
+If the image is a vehicle, identify the likely vehicle type and describe its visible features. Keep the answer concise but informative.
+Do not claim anything that is not visibly supported by the image.
+"""
+
 # Thin wrapper for the Groq messages - keeps analyzer.py clean
 def build_vision_messages(image_url: str, user_question: str | None = None) -> list[dict]:
     """Build the messages payload for Groq vision. User question is included as context but not as instruction to diagnose."""
@@ -48,4 +55,15 @@ def build_vision_messages(image_url: str, user_question: str | None = None) -> l
     # Include original question as additional context after the image, but keep it separate from the system instruction
     if user_question and user_question.strip():
         user_content.append({"type": "text", "text": f"User question context (for retrieval focus, do not answer yet): {user_question.strip()}"})
+    return [{"role": "user", "content": user_content}]
+
+
+def build_general_image_messages(image_url: str, user_question: str | None = None) -> list[dict]:
+    """Build the messages payload for general non-medical image description."""
+    user_content: list[dict] = [
+        {"type": "text", "text": GENERAL_IMAGE_PROMPT},
+        {"type": "image_url", "image_url": {"url": image_url}},
+    ]
+    if user_question and user_question.strip():
+        user_content.append({"type": "text", "text": f"User question: {user_question.strip()}"})
     return [{"role": "user", "content": user_content}]

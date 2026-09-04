@@ -8,8 +8,38 @@ import requests
 
 from rag_pipeline.config.settings import settings
 from rag_pipeline.generation.sanitize import strip_thinking
-from rag_pipeline.vision.prompts import build_vision_messages
+from rag_pipeline.vision.prompts import build_general_image_messages, build_vision_messages
 from rag_pipeline.vision.schemas import ImageAnalysis
+
+
+def analyze_general_image(image_url: str, user_question: str | None = None, model_name: str | None = None) -> str:
+    """Describe a non-medical image directly without entering the medical RAG flow."""
+    provider = getattr(settings, "model_provider", "groq")
+    if provider != "groq":
+        raise NotImplementedError(f"General image analysis requires groq provider, got {provider}")
+
+    api_key = getattr(settings, "groq_api_key", None) or os.getenv("GROQ_API_KEY")
+    if not api_key:
+        raise ValueError("GROQ_API_KEY is not set in .env (Python)")
+
+    model = model_name or getattr(settings, "model_name", "qwen/qwen3.6-27b")
+    messages = build_general_image_messages(image_url, user_question)
+
+    response = requests.post(
+        "https://api.groq.com/openai/v1/chat/completions",
+        headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+        json={
+            "model": model,
+            "messages": messages,
+            "temperature": 0.2,
+            "max_tokens": 800,
+        },
+        timeout=60,
+    )
+    response.raise_for_status()
+    payload = response.json()
+    content = payload["choices"][0]["message"]["content"]
+    return strip_thinking(content).strip() or "I can describe the image, but the model returned no visible details."
 
 
 def _extract_json(text: str) -> str:
