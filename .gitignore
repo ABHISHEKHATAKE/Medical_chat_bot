@@ -11,6 +11,10 @@ frontend/node_modules/
 frontend/dist/
 backend/.env
 frontend/.env
+# Secrets: never commit any env variant (backups like .env.bak/.env.real
+# would otherwise leak keys — only *.env.example templates are committable)
+**/.env.*
+!**/.env.example
 # Data
 data/embeddings/vector_store/
 .env.local

@@ -11,7 +11,4 @@ export function isDevAuthenticated() {
   const id = getDevUserId();
   return !!id && id.trim().length > 0;
 }
-export function isClerkConfigured() {
-  const k = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  return !!k && !k.includes("placeholder") && k.startsWith("pk_");
-}
+export { isClerkConfigured } from "../config/auth.js";
