@@ -3,6 +3,7 @@
 A retrieval-augmented generation (RAG) project designed for medical and health-related question answering. The system ingests medical documents, chunks them into searchable units, embeds and indexes them, retrieves relevant passages, reranks them, and sends the best context to a language model to produce grounded answers.
 
 **Full-stack architecture (new):**
+
 - **React + Vite + Tailwind + Clerk** frontend (`frontend/`)
 - **Node.js + Express + Mongoose + Clerk + Zod** backend (`backend/`)
 - **Python FastAPI RAG service** (existing `src/rag_pipeline/` — preserved as AI service)
@@ -178,7 +179,7 @@ python -m venv .venv
 ### 3. Install dependencies
 
 ```powershell
-pip install -r requirements.txt
+
 ```
 
 Or, if using the package configuration:
@@ -335,11 +336,13 @@ run.bat
 ```
 
 This starts:
-*   `py`  — http://127.0.0.1:8000 (docs: /docs)
-*   `api` — http://localhost:5000 (health: /health)
-*   `web` — http://localhost:5173
+
+- `py` — http://127.0.0.1:8000 (docs: /docs)
+- `api` — http://localhost:5000 (health: /health)
+- `web` — http://localhost:5173
 
 Other modes:
+
 ```powershell
 npm start              # production (no reload)
 npm run dev:py         # only Python
@@ -351,6 +354,7 @@ powershell -File ./run.ps1 -NoReload   # prod via ps1
 Manual alternative (3 terminals):
 
 **1) Python AI service** (port 8000, preserved):
+
 ```powershell
 python -m venv .venv; .\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt; pip install -e .
@@ -359,6 +363,7 @@ python -m uvicorn rag_pipeline.api.main:app --app-dir src --host 127.0.0.1 --por
 ```
 
 **2) Express backend** (port 5000):
+
 ```powershell
 Set-Location backend; npm install
 # copy .env.example -> .env, set MONGODB_URI, AI_SERVICE_URL=http://localhost:8000, CLERK_SECRET_KEY
@@ -366,6 +371,7 @@ node src/server.js  # or: npm run dev
 ```
 
 **3) React frontend** (port 5173):
+
 ```powershell
 Set-Location frontend; npm install; npm run dev
 # VITE_API_URL=http://localhost:5000, VITE_CLERK_PUBLISHABLE_KEY
@@ -379,10 +385,10 @@ Set-Location frontend; npm install; npm run dev
 
 The app has two login UIs behind the same `/sign-in` route: **Clerk** (Google/Facebook buttons) and a **dev fallback form** (amber "DEV LOGIN" banner, any-email login). Which one you see is decided at startup:
 
-*   **Frontend:** Vite embeds `frontend/.env` into the JS bundle when the dev server starts. Editing `.env` afterwards has **no effect until you restart vite** (`Ctrl+C`, then `npm run dev`). If the key is missing/placeholder, you get the dev form — and the browser console shows `[auth] ... DEV login mode`.
-*   **Backend:** `node` reads `backend/.env` at startup. Changing `CLERK_SECRET_KEY` requires restarting the backend. Watch for `[backend] auth mode: clerk` vs `DEV-BYPASS` in its logs.
-*   **Both sides must agree.** Frontend in Clerk mode + backend in dev-bypass mode (or vice versa) causes `401 Unauthorized` on every API call. Check the two console lines above — they must both say Clerk (or both say dev).
-*   **Clerk dev keys** (`pk_test_...`) only work on origins registered in the Clerk dashboard (e.g. `http://localhost:5173`). Opening the app via a different host/IP (e.g. `127.0.0.1` or a LAN address) can bounce you to Clerk's own hosted sign-in page instead.
+- **Frontend:** Vite embeds `frontend/.env` into the JS bundle when the dev server starts. Editing `.env` afterwards has **no effect until you restart vite** (`Ctrl+C`, then `npm run dev`). If the key is missing/placeholder, you get the dev form — and the browser console shows `[auth] ... DEV login mode`.
+- **Backend:** `node` reads `backend/.env` at startup. Changing `CLERK_SECRET_KEY` requires restarting the backend. Watch for `[backend] auth mode: clerk` vs `DEV-BYPASS` in its logs.
+- **Both sides must agree.** Frontend in Clerk mode + backend in dev-bypass mode (or vice versa) causes `401 Unauthorized` on every API call. Check the two console lines above — they must both say Clerk (or both say dev).
+- **Clerk dev keys** (`pk_test_...`) only work on origins registered in the Clerk dashboard (e.g. `http://localhost:5173`). Opening the app via a different host/IP (e.g. `127.0.0.1` or a LAN address) can bounce you to Clerk's own hosted sign-in page instead.
 
 ## Summary
 
