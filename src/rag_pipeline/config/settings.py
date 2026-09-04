@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     model_provider: str = "groq"
     model_name: str = "qwen/qwen3.6-27b"
+    fine_tune_model: str = "https://kbot9607--medical-chatbot-medicalchatbot-chat.modal.run"
     groq_api_key: str | None = None
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     reranker_model: str = "cross-encoder/ms-marco-MiniLM-L-6-v2"
