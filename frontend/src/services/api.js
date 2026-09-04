@@ -1,4 +1,5 @@
 import axios from "axios";
+import { HAS_CLERK } from "../config/auth.js";
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL || "http://localhost:5000",
@@ -13,8 +14,7 @@ export function setClerkTokenGetter(getter) {
 }
 
 api.interceptors.request.use(async (config) => {
-  const clerkKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
-  const hasClerk = clerkKey && !clerkKey.includes("placeholder") && clerkKey.startsWith("pk_");
+  const hasClerk = HAS_CLERK; // single source of truth: config/auth.js
 
   // In Clerk mode, only send Authorization header, not dev header
   if (hasClerk) {

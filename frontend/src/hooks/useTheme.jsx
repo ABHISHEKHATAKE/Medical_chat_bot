@@ -1,6 +1,8 @@
 import { createContext, useContext, useEffect, useState } from "react";
 
-const ThemeContext = createContext();
+// Safe default so a missing Provider can never crash the whole tree
+// (destructure in consumers stays valid; real values come from ThemeProvider).
+const ThemeContext = createContext({ theme: "system", setTheme: () => {} });
 
 const THEME_KEY = "medichat-theme";
 

@@ -1,10 +1,11 @@
 import { Link, useNavigate } from "react-router-dom";
 import { HeartPulse, Menu } from "lucide-react";
 import { Button } from "../ui/Button.jsx";
+import { HAS_CLERK } from "../../config/auth.js";
 
 export function Nav({ onMenu }) {
   const navigate = useNavigate();
-  const clerkMode = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY && !import.meta.env.VITE_CLERK_PUBLISHABLE_KEY.includes("placeholder");
+  const clerkMode = HAS_CLERK; // single source of truth: config/auth.js
   const devUser = localStorage.getItem("dev_user_id");
   const handleLogout = () => {
     localStorage.removeItem("dev_user_id");

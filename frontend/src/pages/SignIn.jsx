@@ -40,6 +40,7 @@ export default function SignIn() {
       </header>
       <div className="flex-1 grid place-items-center p-4">
         <form onSubmit={handleDevLogin} className="w-full max-w-[420px] bg-white dark:bg-[#2A2A2A] rounded-2xl border border-slate-200 dark:border-[#3A3A3A] p-6 sm:p-8 shadow-sm">
+          <div role="status" className="mb-4 rounded-lg border border-amber-300 dark:border-amber-700 bg-amber-50 dark:bg-amber-950 px-3 py-2 text-xs font-semibold text-amber-800 dark:text-amber-200">DEV LOGIN — Clerk key not loaded. This is NOT the Clerk sign-in. Set VITE_CLERK_PUBLISHABLE_KEY and restart vite for the real login.</div>
           <h1 className="text-xl font-semibold dark:text-[#ECECEC]">Sign in</h1>
           <p className="text-sm text-slate-600 dark:text-[#B4B4B4] mt-1">Dev mode — no Clerk keys configured. Enter any email to continue. In production this is Clerk.</p>
           <div className="mt-6 space-y-3">

@@ -375,6 +375,15 @@ Set-Location frontend; npm install; npm run dev
 
 **Env templates:** `backend/.env.example`, `frontend/.env.example`, `.env.example` (root).
 
+### Troubleshooting: wrong login page / auth mode mismatch
+
+The app has two login UIs behind the same `/sign-in` route: **Clerk** (Google/Facebook buttons) and a **dev fallback form** (amber "DEV LOGIN" banner, any-email login). Which one you see is decided at startup:
+
+*   **Frontend:** Vite embeds `frontend/.env` into the JS bundle when the dev server starts. Editing `.env` afterwards has **no effect until you restart vite** (`Ctrl+C`, then `npm run dev`). If the key is missing/placeholder, you get the dev form — and the browser console shows `[auth] ... DEV login mode`.
+*   **Backend:** `node` reads `backend/.env` at startup. Changing `CLERK_SECRET_KEY` requires restarting the backend. Watch for `[backend] auth mode: clerk` vs `DEV-BYPASS` in its logs.
+*   **Both sides must agree.** Frontend in Clerk mode + backend in dev-bypass mode (or vice versa) causes `401 Unauthorized` on every API call. Check the two console lines above — they must both say Clerk (or both say dev).
+*   **Clerk dev keys** (`pk_test_...`) only work on origins registered in the Clerk dashboard (e.g. `http://localhost:5173`). Opening the app via a different host/IP (e.g. `127.0.0.1` or a LAN address) can bounce you to Clerk's own hosted sign-in page instead.
+
 ## Summary
 
 This project is a practical medical RAG system that combines retrieval, reranking, context memory, and generative AI to provide safer and more grounded answers for health-related questions. The full-stack wrapper adds a modern, trustworthy medical UI (Tailwind #0891B2/#059669, Figtree+Noto Sans, AI-Native minimal) with Clerk auth, conversation history, source display, and responsive chat layout.

@@ -21,4 +21,10 @@ export const env = {
 };
 
 if (!env.mongodbUri) console.warn("[env] MONGODB_URI missing");
-if (!env.clerkSecretKey) console.warn("[env] CLERK_SECRET_KEY missing - auth will use dev bypass header x-dev-user-id");
+if (!env.clerkSecretKey) {
+  console.warn("[env] CLERK_SECRET_KEY missing - auth will use dev bypass header x-dev-user-id");
+} else if (!env.clerkSecretKey.startsWith("sk_") || env.clerkSecretKey.includes("placeholder")) {
+  console.warn("[env] CLERK_SECRET_KEY looks like a placeholder - auth will use dev bypass header x-dev-user-id. Set a real sk_ key and RESTART node to use Clerk.");
+} else {
+  console.info("[env] Clerk auth mode active (secret key present).");
+}
