@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { SignUp as ClerkSignUp } from "@clerk/clerk-react";
 import { HeartPulse } from "lucide-react";
-import { Button } from "../components/ui/Button.jsx";
+import { Button } from "../components/ui/button.jsx";
 import { isClerkConfigured, setDevUserId } from "../hooks/useDevAuth.js";
 
 export default function SignUp() {
