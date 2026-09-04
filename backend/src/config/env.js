@@ -18,6 +18,8 @@ export const env = {
   cloudinaryApiKey: process.env.CLOUDINARY_API_KEY,
   cloudinaryApiSecret: process.env.CLOUDINARY_API_SECRET,
   maxImageSizeMB: parseInt(process.env.MAX_IMAGE_SIZE_MB || "5", 10),
+  overpassApiUrl: process.env.OVERPASS_API_URL || "https://overpass-api.de/api/interpreter",
+  hospitalSearchRadius: parseInt(process.env.HOSPITAL_SEARCH_RADIUS || "5000", 10) || 5000,
 };
 
 if (!env.mongodbUri) console.warn("[env] MONGODB_URI missing");

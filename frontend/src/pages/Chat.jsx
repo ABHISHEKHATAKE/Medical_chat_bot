@@ -265,6 +265,7 @@ export default function Chat() {
       onDelete={onDelete}
       onRename={onRename}
       onNewChat={onNew}
+      onHospitals={() => navigate("/hospitals")}
       query={query}
       setQuery={setQuery}
       drawerOpen={drawerOpen}
