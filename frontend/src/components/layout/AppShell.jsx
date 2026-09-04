@@ -1,9 +1,9 @@
 import { useState, useEffect } from "react";
-import { Search, Plus, MessageSquare, Trash2, LogOut, Stethoscope, PanelLeftClose, PanelLeftOpen, X, Menu } from "lucide-react";
+import { Search, Plus, MessageSquare, Trash2, LogOut, Stethoscope, PanelLeftClose, PanelLeftOpen, X, Menu, Hospital } from "lucide-react";
 import { Button } from "../ui/button.jsx";
 import { ThemeToggle } from "../ui/ThemeToggle.jsx";
 
-export function AppShell({ sidebar, header, children, onNewChat, conversations, activeId, onSelect, onDelete, onRename, query, setQuery, drawerOpen, setDrawerOpen, collapsed, setCollapsed, clerkUser, isClerkMode, onLogout, isAuthed }) {
+export function AppShell({ sidebar, header, children, onNewChat, onHospitals, conversations, activeId, onSelect, onDelete, onRename, query, setQuery, drawerOpen, setDrawerOpen, collapsed, setCollapsed, clerkUser, isClerkMode, onLogout, isAuthed }) {
   const [renameTarget, setRenameTarget] = useState(null);
   const [renameValue, setRenameValue] = useState("");
 
@@ -28,6 +28,9 @@ export function AppShell({ sidebar, header, children, onNewChat, conversations, 
               <div className="flex flex-col items-center py-3 gap-2">
                 <button onClick={() => setCollapsed(false)} aria-label="New chat" className="w-9 h-9 rounded-xl bg-[#0F172A] dark:bg-white text-white dark:text-[#0F172A] grid place-items-center"><Plus size={16} /></button>
                 <button aria-label="Search chats" onClick={() => setCollapsed(false)} className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-[#252525] grid place-items-center text-slate-500"><Search size={16} /></button>
+                {onHospitals && (
+                  <button aria-label="Find nearby hospitals" onClick={onHospitals} className="w-9 h-9 rounded-xl hover:bg-slate-100 dark:hover:bg-[#252525] grid place-items-center text-slate-500"><Hospital size={16} /></button>
+                )}
               </div>
             ) : (
               <>
@@ -82,6 +85,18 @@ export function AppShell({ sidebar, header, children, onNewChat, conversations, 
                     </div>
                   )}
                 </div>
+                {onHospitals && (
+                  <div className="px-2 pb-2">
+                    <button
+                      onClick={onHospitals}
+                      aria-label="Find nearby hospitals (requests your location)"
+                      className="flex w-full items-center gap-2 rounded-xl border border-[#E5E7EB] dark:border-[#3A3A3A] bg-[#F8F9FA] dark:bg-[#1E293B] px-3 py-2.5 text-sm font-medium hover:bg-[#EEF2FF] dark:hover:bg-[#252525]"
+                    >
+                      <Hospital size={14} className="shrink-0 text-[#16A34A]" aria-hidden="true" />
+                      <span className="flex-1 truncate text-left">Find Nearby Hospitals</span>
+                    </button>
+                  </div>
+                )}
               </>
             )}
             <div className="p-3 border-t border-[#E5E7EB] dark:border-[#3A3A3A] flex items-center gap-2">
@@ -168,6 +183,18 @@ export function AppShell({ sidebar, header, children, onNewChat, conversations, 
                     </div>
                   )}
                 </div>
+                {onHospitals && (
+                  <div className="px-2 pb-2">
+                    <button
+                      onClick={() => { onHospitals(); setDrawerOpen(false); }}
+                      aria-label="Find nearby hospitals (requests your location)"
+                      className="flex w-full items-center gap-2 rounded-xl border border-[#E5E7EB] dark:border-[#3A3A3A] bg-[#F8F9FA] dark:bg-[#1E293B] px-3 py-2.5 text-sm font-medium hover:bg-[#EEF2FF] dark:hover:bg-[#252525]"
+                    >
+                      <Hospital size={14} className="shrink-0 text-[#16A34A]" aria-hidden="true" />
+                      <span className="flex-1 truncate text-left">Find Nearby Hospitals</span>
+                    </button>
+                  </div>
+                )}
                 <div className="p-3 border-t border-[#E5E7EB] dark:border-[#3A3A3A] flex items-center gap-2">
                   {clerkUser?.imageUrl ? (
                     <img src={clerkUser.imageUrl} alt="Profile" className="w-8 h-8 rounded-full object-cover border border-[#E5E7EB] dark:border-[#3A3A3A]" />
