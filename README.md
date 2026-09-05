@@ -12,7 +12,7 @@ A retrieval-augmented generation (RAG) project designed for medical and health-r
 graph TD
   React[React Frontend :5173] -->|axios + Clerk token / dev header| Express[Express Backend :5000]
   Express -->|Mongoose| MongoDB[(MongoDB)]
-  Express -->|POST /ask {session_id, question}| Python[Python FastAPI :8000]
+  Express -->|POST /ask| Python[Python FastAPI :8000]
   Python --> FAISS[(FAISS IndexFlatIP)]
   Python --> Embeddings
   Python --> Reranker
